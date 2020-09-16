@@ -34,3 +34,4 @@ Ping VM2 from VM1 and capture packets using Wireshark
 __note:__ this is switched on packets going the other way
 
 
+![](p3.png)
