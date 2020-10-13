@@ -8,16 +8,14 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <strings.h>
-
+#include <string.h>
 
 #define SERVER_TCP_PORT 3000	/* well-known port */
-#define BUFLEN		256	/* buffer length */
+#define BUFLEN		256			/* buffer length */
+#define MAXSIZE		100			/* buffer length */
 
 int echod(int);
 void reaper(int);
-
-FILE *ifp;
-char *mode = "r";
 
 int main(int argc, char **argv)
 {
@@ -31,9 +29,6 @@ int main(int argc, char **argv)
 	case 2:
 		port = atoi(argv[1]);
 		break;
-	case 3:
-		port = atoi(argv[1]);
-		ifp = fopen(argv[2], mode);
 	default:
 		fprintf(stderr, "Usage: %s [port]\n", argv[0]);
 		exit(1);
@@ -70,12 +65,7 @@ int main(int argc, char **argv)
 	  switch (fork()){
 	  case 0:		/* child */
 		(void) close(sd);
-		if (argc == 2){
-			exit(echod(new_sd));
-		}
-		else if (argc == 3) {
-			exit(fileshare(new_sd,ifp));
-		}
+		exit(echod(new_sd));
 	  default:		/* parent */
 		(void) close(new_sd);
 		break;
@@ -85,20 +75,30 @@ int main(int argc, char **argv)
 	}
 }
 
-int fileshare(int sd, FILE *file) 
-{	
-	fseek(file, 0L, SEEK_END); 
-    long int res = ftell(file); 
-	write(sd, "hellofile",9);
-	close(sd);
-	fclose(file); 
-	return(0);
-}
-
 /*	echod program	*/
 int echod(int sd)
 {
-	write(sd, "hello\n", 6);
+	char	j,*bp, buf[BUFLEN], filebuf[MAXSIZE];
+	int 	n,m,i,bytes_to_read,bufsize;
+	FILE *fptr;
+
+	n = read(sd, buf, BUFLEN);
+	fptr = fopen(buf,"r");
+	
+    if (fptr != NULL) 
+    {   
+		while(fgets(filebuf, 100, fptr)> 0) {
+    		write(sd, filebuf, 100);
+   		}
+		printf("File Sent: %s\n", buf);
+    } 
+	else 
+	{
+		printf("Error! Could not find file %s\n", buf); 
+        return(1); 
+	}
+	
+	fclose(fptr);
 	close(sd);
 
 	return(0);

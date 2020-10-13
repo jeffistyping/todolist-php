@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <strings.h>
+#include <string.h>
 
 
 
@@ -22,6 +23,7 @@ int main(int argc, char **argv)
 	struct	sockaddr_in server;
 	char	*host, *bp, rbuf[BUFLEN], sbuf[BUFLEN];
 
+	/* flags */
 	switch(argc){
 	case 2:
 		host = argv[1];
@@ -58,16 +60,29 @@ int main(int argc, char **argv)
 	  exit(1);
 	}
 
-	printf("Recieve: \n");
-	n = 9;
-	bp = rbuf;
-	bytes_to_read = n;
-	while ((i = read(sd, bp, bytes_to_read)) > 0){
-		bp += i;
-		bytes_to_read -=i;
-	}
-	write(1, rbuf, n);
+	printf("File to Download: \n");
+	n = read(0, sbuf, BUFLEN);
+	strtok(sbuf, "\n");
+	write(sd, sbuf, n);		/* send it out */
+	
 
+	bp = rbuf;
+	FILE *outptr;
+	int flag = 0;
+	while(i = read(sd, rbuf, 100) > 0) {
+		if (flag == 0) 
+		{
+			outptr = fopen(sbuf,"w+");
+			printf("File Recieved: %s\n", sbuf);
+		}
+		flag = 1;
+		fprintf(outptr, rbuf, 100);
+
+	}
+	if (flag == 0) 
+		printf("Error! File Not Found: %s\n",sbuf);
+	else
+		fclose(outptr);
 	close(sd);
 	return(0);
 }
